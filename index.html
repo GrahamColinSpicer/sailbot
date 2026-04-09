@@ -192,7 +192,7 @@
    CONFIGURATION
 ═══════════════════════════════════════════════════════ */
 
-const API_KEY   = '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';
+const PROXY_URL = 'https://sailbot-proxy.colingraham0.workers.dev';
 const CLUB_NAME = 'Frensham Pond Sailing Club';
 
 const CLUB_CONTEXT = `The sailors are based at ${CLUB_NAME} in Surrey. Frensham Pond is a small inland freshwater lake — no tides, but shifty and gusty wind due to surrounding trees and hills. The main junior classes are RS Tera Sport, RS Tera Pro, RS Feva, and ILCA4. These sailors also travel widely to compete: larger inland reservoirs (more consistent pressure, bigger waves), tidal estuaries (current affects strategy, laylines, and boat speed), open coastal venues (sea breezes, swell, tidal streams), and international events. When giving advice, consider the venue type — if they mention a specific location, tailor your answer. If they don't mention a venue, ask where they're sailing.`;
@@ -411,7 +411,7 @@ const PERSONAS = [
 document.getElementById('appSub').textContent = `RS Tera · RS Feva · ILCA4 · ${CLUB_NAME}`;
 document.getElementById('footerNote').textContent = `Powered by Claude AI · ${CLUB_NAME} · Sailing topics only`;
 
-if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
+if (!PROXY_URL) {
   document.getElementById('keyBanner').style.display = 'block';
 }
 
@@ -650,13 +650,10 @@ async function sendMessage() {
   showTyping();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
