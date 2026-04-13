@@ -1,29 +1,825 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.3">
-  <style type="text/css">
-    body {background-color: #090e17}
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 15.0px Helvetica; color: #eff4f9; -webkit-text-stroke: #eff4f9; min-height: 18.0px}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 22.0px Helvetica; color: #eff4f9; -webkit-text-stroke: #eff4f9}
-    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; color: #6889a6; -webkit-text-stroke: #6889a6; min-height: 14.0px}
-    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Helvetica; color: #6889a6; -webkit-text-stroke: #6889a6}
-    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 11.0px Helvetica; color: #6889a6; -webkit-text-stroke: #6889a6}
-    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 11.0px Helvetica; color: #6889a6; -webkit-text-stroke: #6889a6; min-height: 13.0px}
-    span.s1 {font-kerning: none}
-    span.s2 {font-kerning: none; color: #eff4f9; -webkit-text-stroke: 0px #eff4f9}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>SailBot — Dinghy Racing Coach</title>
+  <meta name="description" content="AI sailing coach for RS Tera, RS Feva and ILCA4 sailors." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:    #07111F;
+      --navy2:   #0D1E31;
+      --navy3:   #142840;
+      --navy4:   #1E3A55;
+      --teal:    #1AB87E;
+      --teal-lo: rgba(26,184,126,0.12);
+      --white:   #F2F6FA;
+      --muted:   #7A9BB5;
+      --border:  rgba(122,155,181,0.18);
+      --border2: rgba(122,155,181,0.32);
+      --radius:  14px;
+      --font-display: 'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--navy); color: var(--white); font-family: var(--font-body); font-size: 15px; -webkit-font-smoothing: antialiased; }
+
+    #app { max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+    .screen { display: none; flex-direction: column; flex: 1; }
+    .screen.active { display: flex; }
+
+    /* ── Welcome ── */
+    #welcome { padding: 2.5rem 1.5rem 2rem; gap: 1.75rem; overflow-y: auto; }
+    .header { display: flex; align-items: center; gap: 14px; }
+    .logo-mark { width: 44px; height: 44px; background: var(--teal-lo); border: 1px solid rgba(26,184,126,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-mark svg { width: 24px; height: 24px; }
+    .app-name { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--white); }
+    .app-sub { font-size: 12px; color: var(--muted); margin-top: 1px; font-weight: 300; letter-spacing: 0.04em; }
+    .intro { background: var(--navy2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .intro strong { color: var(--white); font-weight: 500; }
+    .section-label { font-size: 11px; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+    .persona-list { display: flex; flex-direction: column; gap: 10px; }
+    .persona-card { background: var(--navy2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; }
+    .persona-card:hover { background: var(--navy3); border-color: var(--border2); }
+    .persona-card:active { transform: scale(0.98); }
+    .p-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.07); }
+    .p-body { flex: 1; min-width: 0; }
+    .p-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 1px; }
+    .p-role { font-size: 12px; color: var(--teal); font-weight: 500; margin-bottom: 6px; }
+    .p-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .p-chevron { flex-shrink: 0; color: var(--border2); margin-top: 14px; }
+    .footer-note { font-size: 11px; color: var(--muted); text-align: center; opacity: 0.6; line-height: 1.6; }
+
+    /* ── Chat ── */
+    #chat { height: 100dvh; overflow: hidden; }
+    .chat-header { display: flex; align-items: center; gap: 8px; padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--navy); flex-shrink: 0; }
+    .chat-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.07); }
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--white); }
+    .chat-role { font-size: 12px; color: var(--teal); font-weight: 500; }
+    .hdr-btn { background: var(--navy3); border: 1px solid var(--border2); border-radius: 8px; color: var(--muted); font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 6px 10px; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s; flex-shrink: 0; display: flex; align-items: center; gap: 5px; }
+    .hdr-btn:hover { background: var(--navy4); color: var(--white); }
+    .hdr-btn svg { width: 14px; height: 14px; }
+
+    .messages { flex: 1; overflow-y: auto; padding: 1.25rem 1.25rem 0.5rem; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 84%; font-size: 14px; line-height: 1.6; padding: 10px 14px; border-radius: 16px; }
+    .msg.bot { background: var(--navy3); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; color: var(--white); }
+    .msg.user { background: var(--teal); color: #04342C; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
+    .msg.typing { display: flex; align-items: center; gap: 5px; padding: 14px 16px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
+
+    /* Resource link buttons rendered inside/below bot messages */
+    .msg-resources { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .msg-resource-link { display: flex; align-items: center; gap: 8px; background: var(--navy2); border: 1px solid var(--border2); border-radius: 10px; padding: 8px 12px; text-decoration: none; color: var(--white); font-size: 13px; transition: background 0.15s, border-color 0.15s; }
+    .msg-resource-link:hover { background: var(--navy4); border-color: var(--teal); }
+    .msg-resource-link .rl-icon { font-size: 14px; flex-shrink: 0; }
+    .msg-resource-link .rl-body { flex: 1; min-width: 0; }
+    .msg-resource-link .rl-name { font-weight: 500; font-size: 13px; color: var(--white); }
+    .msg-resource-link .rl-type { font-size: 11px; color: var(--muted); }
+    .msg-resource-link .rl-arrow { color: var(--muted); font-size: 12px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0.5rem 1.25rem 0.75rem; }
+    .chip { background: var(--navy3); border: 1px solid var(--border2); border-radius: 99px; padding: 6px 14px; font-size: 13px; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; -webkit-tap-highlight-color: transparent; font-family: var(--font-body); }
+    .chip:hover { background: var(--navy4); color: var(--white); border-color: var(--teal); }
+
+    .input-wrap { display: flex; align-items: flex-end; gap: 10px; padding: 0.75rem 1.25rem 1rem; border-top: 1px solid var(--border); background: var(--navy); flex-shrink: 0; }
+    .input-wrap textarea { flex: 1; background: var(--navy2); border: 1px solid var(--border2); border-radius: 12px; padding: 10px 14px; font-size: 14px; font-family: var(--font-body); color: var(--white); resize: none; min-height: 42px; max-height: 120px; line-height: 1.5; outline: none; transition: border-color 0.15s; }
+    .input-wrap textarea::placeholder { color: var(--muted); }
+    .input-wrap textarea:focus { border-color: rgba(26,184,126,0.5); }
+    .send-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--teal); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s; }
+    .send-btn:hover { opacity: 0.85; }
+    .send-btn:active { transform: scale(0.94); }
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .send-btn svg { width: 18px; height: 18px; }
+
+    /* ── Resources panel ── */
+    #resources { height: 100dvh; overflow: hidden; }
+    .res-header { display: flex; align-items: center; gap: 12px; padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--navy); flex-shrink: 0; }
+    .res-header-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; flex: 1; }
+    .res-body { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .res-category-label { font-size: 11px; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+    .res-card { background: var(--navy2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .res-item { display: flex; align-items: center; gap: 14px; padding: 0.875rem 1rem; text-decoration: none; color: var(--white); border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .res-item:last-child { border-bottom: none; }
+    .res-item:hover { background: var(--navy3); }
+    .res-item-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .res-item-body { flex: 1; min-width: 0; }
+    .res-item-name { font-size: 14px; font-weight: 500; color: var(--white); margin-bottom: 2px; }
+    .res-item-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .res-item-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 99px; letter-spacing: 0.04em; flex-shrink: 0; }
+    .badge-yt { background: rgba(255,80,80,0.15); color: #f87171; }
+    .badge-web { background: var(--teal-lo); color: var(--teal); }
+    .badge-pdf { background: rgba(186,117,23,0.15); color: #fbbf24; }
+    .res-note { font-size: 12px; color: var(--muted); text-align: center; opacity: 0.6; line-height: 1.6; padding: 0 0.5rem 1rem; }
+
+    #keyBanner { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 13px; color: #f87171; line-height: 1.6; text-align: center; }
   </style>
 </head>
 <body>
-<p class="p1"><span class="s1"></span><br></p>
-<p class="p2"><span class="s1">SailBot</span></p>
-<p class="p3"><span class="s1"></span><br></p>
-<p class="p4"><span class="s1">Ask anything about </span><span class="s2">dinghy racing</span><span class="s1"> — tactics, starts, mark roundings, boat handling, rules, reading the wind. Pick a coach that suits your mood today.</span></p>
-<p class="p5"><span class="s1">PICK YOUR COACH</span></p>
-<p class="p6"><span class="s1"></span><br></p>
+<div id="app">
+
+  <!-- WELCOME -->
+  <div id="welcome" class="screen active">
+    <div class="header">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 3L12 19" stroke="#1AB87E" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 5L4 16L12 16Z" fill="#1AB87E"/>
+          <path d="M7 21L17 21" stroke="#1AB87E" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="app-name">SailBot</div>
+        <div class="app-sub" id="appSub"></div>
+      </div>
+    </div>
+    <div id="keyBanner" style="display:none">⚠️ Add your Anthropic API key to the <code>API_KEY</code> variable in <code>index.html</code> to activate SailBot.</div>
+    <div class="intro">Ask anything about <strong>dinghy racing</strong> — tactics, starts, mark roundings, boat handling, rules, reading the wind. Pick a coach that suits your mood today.</div>
+    <div class="section-label">Pick your coach</div>
+    <div class="persona-list" id="personaList"></div>
+    <p class="footer-note" id="footerNote"></p>
+  </div>
+
+  <!-- CHAT -->
+  <div id="chat" class="screen">
+    <div class="chat-header">
+      <div class="chat-avatar" id="chatAvatar"></div>
+      <div class="chat-info">
+        <div class="chat-name" id="chatName"></div>
+        <div class="chat-role" id="chatRole"></div>
+      </div>
+      <button class="hdr-btn" id="resourcesBtn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M2 3h9M2 8h9M2 13h5"/><circle cx="13" cy="13" r="2.5"/>
+        </svg>
+        Resources
+      </button>
+      <button class="hdr-btn" id="switchBtn">Switch coach</button>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div id="chipsLabel" style="display:none; padding: 0.25rem 1.25rem 0; font-size: 12px; color: var(--muted);">Or just type anything about sailing ↓</div>
+    <div class="chips" id="chips"></div>
+    <div class="input-wrap">
+      <textarea id="userInput" placeholder="Ask your coach..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#04342C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2" fill="#04342C" stroke="none"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESOURCES PANEL -->
+  <div id="resources" class="screen">
+    <div class="res-header">
+      <button class="hdr-btn" id="resBackBtn">← Back</button>
+      <div class="res-header-title">Resources</div>
+    </div>
+    <div class="res-body" id="resBody"></div>
+  </div>
+
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIGURATION
+═══════════════════════════════════════════════════════ */
+
+const PROXY_URL = 'https://sailbot-proxy.colingraham0.workers.dev';
+const CLUB_NAME = 'Frensham Pond Sailing Club';
+
+const CLUB_CONTEXT = `The sailors are based at ${CLUB_NAME} in Surrey. Frensham Pond is a small inland freshwater lake — no tides, but shifty and gusty wind due to surrounding trees and hills. The main junior classes are RS Tera Sport, RS Tera Pro, RS Feva, and ILCA4. These sailors also travel widely to compete: larger inland reservoirs (more consistent pressure, bigger waves), tidal estuaries (current affects strategy, laylines, and boat speed), open coastal venues (sea breezes, swell, tidal streams), and international events. When giving advice, consider the venue type — if they mention a specific location, tailor your answer. If they don't mention a venue, ask where they're sailing.`;
+
+/* ═══════════════════════════════════════════════════════
+   BOAT KNOWLEDGE BASE
+   Accurate facts about the junior fleet — use these to
+   avoid hallucinations. If unsure, say so.
+═══════════════════════════════════════════════════════ */
+
+const BOAT_FACTS = `
+BOAT FACTS — use these to give accurate advice. If you are not certain of a technical detail, say "I'm not 100% sure — check with your coach or the class association" rather than guessing.
+
+RS TERA SPORT & PRO:
+- Singlehanded (one sailor only). No jib, no spinnaker. One sail (the mainsail) only — it is a cat-rigged boat.
+- The mast is unstayed — no shrouds or forestay. The boom vang (kicker) is the primary sail shape control.
+- Tera Sport has a smaller sail for lighter/younger sailors. Tera Pro has a larger sail for heavier/older sailors. Sailors do NOT mix sails between Sport and Pro — it is a class rule.
+- Downwind: keep weight central or slightly forward. Moving weight right to the back increases drag and slows the boat — this is a common mistake.
+- Upwind light winds: heel slightly to leeward to help the sail fill. Upwind strong winds: keep the boat flat, hike hard, use the vang to depower.
+- Tacking: step through the boat smoothly — the boat is small and reactive.
+- There is no trapeze. No spinnaker pole. No kite.
+
+RS FEVA:
+- Doublehanded — helm and crew. Has a mainsail, jib, AND a spinnaker (asymmetric kite).
+- The crew does NOT trapeze (the Feva is not a trapezing boat). Both sailors sit in the boat.
+- Spinnaker is an asymmetric, launched from a bowsprit.
+- Crew communication is critical, especially for spinnaker hoists and drops.
+- Upwind: both sailors hike, crew controls the jib.
+
+ILCA4 (junior Laser):
+- Singlehanded. No jib, no spinnaker. One sail — cat-rigged like the Tera.
+- ILCA4 is the junior version of the ILCA (Laser) class. Smaller sail than ILCA6 or ILCA7.
+- The mast bends significantly — vang, cunningham, and outhaul are the three key sail controls.
+- Downwind: keep weight central to slightly forward in light winds. In planing conditions, move back only enough to encourage planing — NOT to the very back of the cockpit.
+- Upwind: hike hard, keep boat flat, feather into gusts rather than bearing away.
+- There is no trapeze. No spinnaker.
+
+GENERAL SAILING FACTS:
+- Port gives way to starboard tack. Windward boat keeps clear of leeward boat. Boat clear astern keeps clear of boat clear ahead.
+- Leeward mark rounding (most common): approach wide, exit tight (outside-inside). 
+- Windward mark rounding: round tight, then decide reach or run.
+- A tack is turning the bow through the wind. A gybe is turning the stern through the wind.
+- The start line: the committee boat (RC) end is usually the starboard end; the pin end is usually port end.
+`;
+
+/* ═══════════════════════════════════════════════════════
+   RESOURCES
+   Add, remove or edit resources here. Coaches reference
+   them by name. URLs are shown as tappable links.
+   Types: 'youtube' | 'website' | 'pdf'
+   NOTE: Verify URLs are still live before publishing.
+═══════════════════════════════════════════════════════ */
+
+const RESOURCES = [
+  {
+    category: 'Your club',
+    items: [
+      {
+        id: 'fpsc',
+        name: 'Frensham Pond Sailing Club',
+        desc: 'Race calendar, results, notices to competitors and club info',
+        url: 'https://www.frensham.org',
+        type: 'website',
+        icon: '⛵'
+      }
+    ]
+  },
+  {
+    category: 'YouTube — technique & coaching',
+    items: [
+      {
+        id: 'rya-yt',
+        name: 'RYA on YouTube',
+        desc: 'Coaching videos, technique guides and racing tips from the national body',
+        url: 'https://www.youtube.com/@RoyalYachtingAssociation',
+        type: 'youtube',
+        icon: '🎬'
+      },
+      {
+        id: 'rs-yt',
+        name: 'RS Sailing on YouTube',
+        desc: 'Boat-specific sailing and rigging videos for RS classes',
+        url: 'https://www.youtube.com/@RSSailing',
+        type: 'youtube',
+        icon: '🎬'
+      },
+      {
+        id: 'rooster-yt',
+        name: 'Rooster Sailing on YouTube',
+        desc: 'Technique tips, boat setup and dinghy sailing videos',
+        url: 'https://www.youtube.com/@RoosterSailing',
+        type: 'youtube',
+        icon: '🎬'
+      }
+    ]
+  },
+  {
+    category: 'Boat class info',
+    items: [
+      {
+        id: 'rs-tera',
+        name: 'RS Tera — Official Class Page',
+        desc: 'Rigging guides, class rules, tuning tips and event info for RS Tera Sport and Pro',
+        url: 'https://www.rssailing.com/project/rs-tera/',
+        type: 'website',
+        icon: '📋'
+      },
+      {
+        id: 'rs-feva',
+        name: 'RS Feva — Official Class Page',
+        desc: 'Rigging, class rules, tuning tips and events for the RS Feva',
+        url: 'https://www.rssailing.com/project/rs-feva/',
+        type: 'website',
+        icon: '📋'
+      },
+      {
+        id: 'ilca',
+        name: 'ILCA Class Association',
+        desc: 'Official class body for the ILCA (Laser) — rules, rankings and events',
+        url: 'https://www.ilcaclass.org',
+        type: 'website',
+        icon: '📋'
+      }
+    ]
+  },
+  {
+    category: 'Rules & racing',
+    items: [
+      {
+        id: 'rya-racing',
+        name: 'RYA Racing',
+        desc: 'Racing development, rules guidance and coaching resources from the RYA',
+        url: 'https://www.rya.org.uk/racing',
+        type: 'website',
+        icon: '🏁'
+      },
+      {
+        id: 'world-sailing',
+        name: 'World Sailing',
+        desc: 'The international governing body — official racing rules, event info and rankings',
+        url: 'https://www.sailing.org',
+        type: 'website',
+        icon: '🌍'
+      }
+    ]
+  },
+  {
+    category: 'Weather & tides',
+    items: [
+      {
+        id: 'windguru',
+        name: 'Windguru',
+        desc: 'Specialist wind and weather forecasts for sailors — great before events',
+        url: 'https://www.windguru.cz',
+        type: 'website',
+        icon: '💨'
+      },
+      {
+        id: 'bbc-weather',
+        name: 'BBC Weather',
+        desc: 'Reliable UK weather forecasts including wind direction and strength',
+        url: 'https://www.bbc.co.uk/weather',
+        type: 'website',
+        icon: '🌤️'
+      },
+      {
+        id: 'tidetimes',
+        name: 'Tide Times (UK)',
+        desc: 'Check tide times and heights for UK coastal and estuary venues before racing',
+        url: 'https://www.tidetimes.org.uk',
+        type: 'website',
+        icon: '🌊'
+      }
+    ]
+  }
+];
+
+/* ─── Build resource lookup map for coaches ─── */
+const RESOURCE_MAP = {};
+RESOURCES.forEach(cat => cat.items.forEach(r => { RESOURCE_MAP[r.id] = r; }));
+
+const RESOURCE_SUMMARY = RESOURCES.map(cat =>
+  cat.items.map(r => `- ${r.name} (id:${r.id}): ${r.desc}`).join('\n')
+).join('\n');
+
+/* ═══════════════════════════════════════════════════════
+   SHARED COACHING RULES
+═══════════════════════════════════════════════════════ */
+
+const BASE_RULES = `
+COACHING STYLE — CRITICAL:
+Keep every answer SHORT — 2 to 3 sentences maximum. No bullet points, no lists. If a question is complex, answer the single most important part and ask which bit they want to go deeper on. Always end with a question that makes the sailor think — use guided discovery, not lectures. Instead of telling them the answer, ask questions that help them figure it out. For example: "What do you think happens to your speed when you ease the sail a bit?" rather than "Easing the sail increases speed."
+
+You are coaching sailors aged 8 to 16. Use clear, simple language. Explain any technical terms briefly when you first use them.
+
+ACCURACY — CRITICAL:
+Use the boat facts below. If you are not certain of a specific technical detail, say "I'm not 100% sure — check with your coach or the class association" rather than guessing.
+${BOAT_FACTS}
+
+VENUE CONTEXT:
+${CLUB_CONTEXT}
+
+SAFEGUARDING — CRITICAL:
+You only discuss sailing, boat handling, racing, weather, tides, boat setup, rigging, fitness for sailing, and the Racing Rules. If someone asks about anything unrelated to sailing, respond warmly with: "Ha, nice try! I'm only really useful for sailing stuff — what do you want to work on?" and redirect to sailing. If someone uses rude or inappropriate language, respond with: "Let's keep it friendly on the water! What can I help you with sailing-wise?" Never ask for or encourage sharing of personal information (full name, school, address). Do not engage with unkind comments about other sailors or coaches. If someone seems upset or distressed, respond with care — "That sounds tough — please talk to a trusted adult or your coach" — and gently redirect back to sailing.
+
+CHIPS AND RESOURCES:
+At the very end of every reply, after your question, add two tags:
+1. [CHIPS:option1|option2|option3|Something else...] — always include exactly 3 follow-up options (max 6 words each) plus "Something else..." as the last option. Make them feel like things a real sailor would genuinely say or ask — a mix of questions and short topics. Make them specific to what you just discussed. Examples of good chips: "Why was I slow upwind?"|"How do I tack faster?"|"What's the best mark rounding?" Examples of bad chips: "Upwind"|"Tactics"|"Rules"
+2. Optionally, if a specific resource from the list below would genuinely help, also add [RESOURCE:id]. Only include this when clearly relevant — at most once per reply.
+
+Example ending: "What do you think made the biggest difference — your tack timing or where you crossed the fleet? [CHIPS:My tacks were too slow|I went the wrong way|How do I read the fleet?|Something else...] [RESOURCE:rya-racing]"
+
+Available resources:
+${RESOURCE_SUMMARY}`;
+
+/* ═══════════════════════════════════════════════════════
+   PERSONAS
+═══════════════════════════════════════════════════════ */
+
+const PERSONAS = [
+  {
+    id: 'pete',
+    name: 'Pete',
+    role: 'The tough coach',
+    emoji: '🏆',
+    avatarBg: 'rgba(26,184,126,0.15)',
+    desc: 'Ex-national squad racer. Direct, high standards — but he\'ll make you faster.',
+    greeting: "Right, let's get to work. What are we fixing today?",
+    chips: ['My starts are terrible', 'I keep losing upwind', 'Mark rounding mistakes', 'Racing rules help', 'Something else...'],
+    system: `You are Pete Walsh, a straight-talking ex-national squad ILCA sailor who now coaches the junior racing squad at Frensham Pond Sailing Club. You raced at Youth Nationals three times and were Frensham club champion four years running. You retired from racing at 28 and now put everything into coaching. You call things exactly as you see them — if a sailor made a bad tack, you'll say so — but you never mock, never humiliate, and you are quietly very proud of every single sailor you coach. Your style: short, punchy sentences. You do not accept "the wind was bad" as an excuse — there's always something the sailor could have done better. You celebrate smart decisions and real improvement with genuine warmth: "Now THAT'S what I'm talking about." Catchphrases: "Right, let's see it then.", "What were you thinking there?", "Again — but better.", "That's what I'm talking about." You believe effort is non-negotiable and talent is something you earn through repetition. ${BASE_RULES}`
+  },
+  {
+    id: 'sunny',
+    name: 'Sunny',
+    role: 'The encouraging mentor',
+    emoji: '🌟',
+    avatarBg: 'rgba(99,153,34,0.15)',
+    desc: 'Patient, warm, always in your corner. Great for building confidence.',
+    greeting: "Hey! Great to have you here — what would you like to work on today?",
+    chips: ['I capsized loads today', 'Feeling nervous racing', 'New to racing', 'Boat setup help', 'Something else...'],
+    system: `You are Sunny Patel, a warm and endlessly encouraging junior sailing coach at Frensham Pond Sailing Club. You were an RS Feva fleet champion in your teens and discovered your true calling when you helped a terrified friend learn to race — and watched them cross the finish line for the first time with the biggest grin imaginable. That moment changed everything for you. You believe every single sailor can improve with the right support, and no question is ever too basic or too silly. You use friendly analogies to make things click ("think of the sail like a wing on a plane — it works the same way"). You are patient, warm, and genuinely buzzing with excitement at every tiny bit of progress. Catchphrases: "Oh that's such a great question!", "Let's figure this out together!", "You've totally got this.", "Every single top sailor started exactly where you are." You never let a sailor leave the conversation feeling discouraged. ${BASE_RULES}`
+  },
+  {
+    id: 'prof',
+    name: 'The Prof',
+    role: 'The tactical genius',
+    emoji: '🧠',
+    avatarBg: 'rgba(83,74,183,0.2)',
+    desc: 'Obsessed with wind shifts, laylines and race strategy. Nerdy in the best way.',
+    greeting: "Excellent — a sailor with questions! What tactical puzzle are we cracking today?",
+    chips: ['How do I read wind shifts?', 'Laylines explained please', 'Start strategy help', 'Reading the fleet', 'Something else...'],
+    system: `You are "The Prof" — real name Dr. Alan Marsh — a brilliant and gloriously eccentric tactical sailing coach at Frensham Pond Sailing Club. You have a PhD in meteorology, you have memorised the Racing Rules of Sailing, and you keep a detailed wind-shift log going back 14 years. You genuinely love the intellectual puzzle of racing: wind bends, pressure lines, current vectors, fleet dynamics. You always explain the WHY behind every piece of advice — never just "do this", always "here's why this works". You reference Racing Rules by number when relevant (e.g. "Rule 18.2 is the one you need here"). You get visibly excited by interesting tactical scenarios. You define every technical term the moment you use it. You make nerdy feel genuinely cool. Catchphrases: "Fascinating question!", "Now let me explain the physics here...", "The data strongly suggests...", "Rule 18.2 is absolutely your friend here." You are enthusiastic, a little eccentric, and completely passionate about the science of going fast around a racecourse. ${BASE_RULES}`
+  },
+  {
+    id: 'kai',
+    name: 'Kai',
+    role: 'Fellow sailor',
+    emoji: '🤙',
+    avatarBg: 'rgba(186,117,23,0.15)',
+    desc: 'Sailed Teras and Fevas for years, now on the ILCA4. Talks like a real sailor.',
+    greeting: "Hey! What do you want to sort out? I've probably made the same mistake 😄",
+    chips: ['Had a terrible race today', 'Capsize recovery tips', 'How do I get faster?', 'Race nerves help', 'Something else...'],
+    system: `You are Kai, a 15-year-old sailor at Frensham Pond Sailing Club who has been sailing since age 8. You started in a Tera Sport, moved up to a Tera Pro, spent two seasons racing an RS Feva with your mate Tom, and are now on the ILCA4. You've been to Junior Nationals twice — didn't podium but learned an absolute tonne. You have made every classic mistake: capsized in front of the whole fleet at a regional event, got OCS off the start at Nationals (absolutely gutting), forgotten to put the bung in before launching (twice), and had a spectacular crash gybe at a tidal estuary event you'd rather forget. You talk exactly like a teenager — "yeah", "mate", "honestly", "no way", "that's so annoying when that happens" — but you genuinely know your sailing inside out. You are honest when something is hard ("yeah that took me ages to get right"), you celebrate when things go well ("YES, that's the one"), and you keep it real and fun. You never make anyone feel bad for asking something basic — you've been there. ${BASE_RULES}`
+  }
+];
+
+/* ═══════════════════════════════════════════════════════
+   RENDER WELCOME
+═══════════════════════════════════════════════════════ */
+
+document.getElementById('appSub').textContent = `RS Tera · RS Feva · ILCA4 · ${CLUB_NAME}`;
+document.getElementById('footerNote').textContent = `Powered by Claude AI · ${CLUB_NAME} · Sailing topics only`;
+
+if (!PROXY_URL) {
+  document.getElementById('keyBanner').style.display = 'block';
+}
+
+const list = document.getElementById('personaList');
+PERSONAS.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'persona-card';
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  card.innerHTML = `
+    <div class="p-avatar" style="background:${p.avatarBg}">${p.emoji}</div>
+    <div class="p-body">
+      <div class="p-name">${p.name}</div>
+      <div class="p-role">${p.role}</div>
+      <div class="p-desc">${p.desc}</div>
+    </div>
+    <svg class="p-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  card.addEventListener('click', () => startChat(p));
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') startChat(p); });
+  list.appendChild(card);
+});
+
+/* ═══════════════════════════════════════════════════════
+   RENDER RESOURCES PANEL
+═══════════════════════════════════════════════════════ */
+
+const BADGE = { youtube: 'YouTube', website: 'Website', pdf: 'PDF' };
+const BADGE_CLASS = { youtube: 'badge-yt', website: 'badge-web', pdf: 'badge-pdf' };
+
+function renderResourcesPanel() {
+  const body = document.getElementById('resBody');
+  body.innerHTML = '';
+  RESOURCES.forEach(cat => {
+    const section = document.createElement('div');
+    const label = document.createElement('div');
+    label.className = 'res-category-label';
+    label.textContent = cat.category;
+    section.appendChild(label);
+    const card = document.createElement('div');
+    card.className = 'res-card';
+    cat.items.forEach(r => {
+      const a = document.createElement('a');
+      a.className = 'res-item';
+      a.href = r.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.innerHTML = `
+        <div class="res-item-icon" style="background:var(--navy3)">${r.icon}</div>
+        <div class="res-item-body">
+          <div class="res-item-name">${r.name}</div>
+          <div class="res-item-desc">${r.desc}</div>
+        </div>
+        <span class="res-item-badge ${BADGE_CLASS[r.type]}">${BADGE[r.type]}</span>`;
+      card.appendChild(a);
+    });
+    section.appendChild(card);
+    body.appendChild(section);
+  });
+  const note = document.createElement('p');
+  note.className = 'res-note';
+  note.textContent = 'Links open in your browser. Resources are curated for RS Tera, Feva and ILCA4 sailors.';
+  body.appendChild(note);
+}
+
+renderResourcesPanel();
+
+/* ═══════════════════════════════════════════════════════
+   SCREEN NAVIGATION
+═══════════════════════════════════════════════════════ */
+
+let previousScreen = 'chat';
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  el.classList.add('active');
+}
+
+document.getElementById('switchBtn').addEventListener('click', () => {
+  clearSession();
+  currentPersona = null;
+  history = [];
+  displayedMessages = [];
+  showScreen('welcome');
+});
+
+document.getElementById('resourcesBtn').addEventListener('click', () => {
+  previousScreen = 'chat';
+  showScreen('resources');
+});
+
+document.getElementById('resBackBtn').addEventListener('click', () => {
+  showScreen(previousScreen);
+});
+
+/* ═══════════════════════════════════════════════════════
+   CHAT LOGIC
+═══════════════════════════════════════════════════════ */
+
+let currentPersona     = null;
+let history            = [];
+let displayedMessages  = []; // tracks rendered messages for localStorage restore
+let isLoading          = false;
+
+const STORAGE_KEY = 'sailbot_v1';
+
+function saveSession() {
+  if (!currentPersona) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      personaId: currentPersona.id,
+      history,
+      displayedMessages
+    }));
+  } catch(e) { /* storage full or unavailable */ }
+}
+
+function clearSession() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+
+function startChat(persona) {
+  currentPersona = persona;
+  history = [];
+  displayedMessages = [];
+  document.getElementById('chatAvatar').style.background = persona.avatarBg;
+  document.getElementById('chatAvatar').textContent = persona.emoji;
+  document.getElementById('chatName').textContent   = persona.name;
+  document.getElementById('chatRole').textContent   = persona.role;
+  document.getElementById('messages').innerHTML     = '';
+  appendBotMessage(persona.greeting, null, persona.chips);
+  showScreen('chat');
+  document.getElementById('userInput').focus();
+}
+
+function showChips(labels) {
+  const container = document.getElementById('chips');
+  const nudge = document.getElementById('chipsLabel');
+  container.innerHTML = '';
+  if (labels && labels.length) {
+    nudge.style.display = 'block';
+    labels.forEach(label => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = label;
+      if (label === 'Something else...') {
+        chip.addEventListener('click', () => {
+          document.getElementById('userInput').focus();
+        });
+      } else {
+        chip.addEventListener('click', () => {
+          document.getElementById('userInput').value = label;
+          document.getElementById('sendBtn').disabled = false;
+          sendMessage();
+        });
+      }
+      container.appendChild(chip);
+    });
+  } else {
+    nudge.style.display = 'none';
+  }
+}
+
+/* Parse [CHIPS:...] and [RESOURCE:id] tags out of bot reply */
+function parseReply(raw) {
+  const resourceMatch = raw.match(/\[RESOURCE:([a-z0-9_-]+)\]/i);
+  const resourceId = resourceMatch ? resourceMatch[1].trim() : null;
+
+  const chipsMatch = raw.match(/\[CHIPS:([^\]]+)\]/i);
+  const chips = chipsMatch
+    ? chipsMatch[1].split('|').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  const text = raw
+    .replace(/\[RESOURCE:[a-z0-9_-]+\]/gi, '')
+    .replace(/\[CHIPS:[^\]]+\]/gi, '')
+    .trim();
+
+  return { text, resourceId, chips };
+}
+
+function appendBotMessage(text, resourceId, chips, save = false) {
+  const msgs = document.getElementById('messages');
+
+  /* text bubble */
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.textContent = text;
+  msgs.appendChild(div);
+
+  /* optional resource link card */
+  if (resourceId && RESOURCE_MAP[resourceId]) {
+    const r = RESOURCE_MAP[resourceId];
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-resources';
+    const a = document.createElement('a');
+    a.className = 'msg-resource-link';
+    a.href = r.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.innerHTML = `
+      <span class="rl-icon">${r.icon}</span>
+      <div class="rl-body">
+        <div class="rl-name">${r.name}</div>
+        <div class="rl-type">${BADGE[r.type]}</div>
+      </div>
+      <span class="rl-arrow">→</span>`;
+    wrap.appendChild(a);
+    msgs.appendChild(wrap);
+  }
+
+  msgs.scrollTop = msgs.scrollHeight;
+  showChips(chips || []);
+
+  if (save) {
+    displayedMessages.push({ role: 'bot', text, resourceId: resourceId || null });
+    saveSession();
+  }
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = 'msg bot typing';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text  = input.value.trim();
+  if (!text || isLoading) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('chips').innerHTML  = '';
+  document.getElementById('chipsLabel').style.display = 'none';
+
+  const msgs = document.getElementById('messages');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'msg user';
+  userDiv.textContent = text;
+  msgs.appendChild(userDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  displayedMessages.push({ role: 'user', text });
+  history.push({ role: 'user', content: text });
+  isLoading = true;
+  showTyping();
+
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 450,
+        system: currentPersona.system,
+        messages: history
+      })
+    });
+    const data = await res.json();
+    const raw  = data.content?.[0]?.text || "Something went wrong — try again!";
+    removeTyping();
+    const { text: replyText, resourceId, chips } = parseReply(raw);
+    appendBotMessage(replyText, resourceId, chips, true);
+    history.push({ role: 'assistant', content: replyText });
+  } catch (e) {
+    removeTyping();
+    appendBotMessage("Couldn't reach the server — check your connection and try again.", null);
+  }
+
+  isLoading = false;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESTORE SESSION FROM LOCALSTORAGE
+═══════════════════════════════════════════════════════ */
+
+(function restoreSession() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const state = JSON.parse(saved);
+    const persona = PERSONAS.find(p => p.id === state.personaId);
+    if (!persona || !state.displayedMessages || !state.displayedMessages.length) return;
+
+    currentPersona = persona;
+    history = state.history || [];
+    displayedMessages = state.displayedMessages;
+
+    document.getElementById('chatAvatar').style.background = persona.avatarBg;
+    document.getElementById('chatAvatar').textContent = persona.emoji;
+    document.getElementById('chatName').textContent   = persona.name;
+    document.getElementById('chatRole').textContent   = persona.role;
+
+    const msgs = document.getElementById('messages');
+    msgs.innerHTML = '';
+
+    state.displayedMessages.forEach(m => {
+      if (m.role === 'user') {
+        const div = document.createElement('div');
+        div.className = 'msg user';
+        div.textContent = m.text;
+        msgs.appendChild(div);
+      } else {
+        appendBotMessage(m.text, m.resourceId, []); // restore without chips
+      }
+    });
+
+    // Add a subtle "session restored" note
+    const note = document.createElement('div');
+    note.style.cssText = 'text-align:center;font-size:11px;color:var(--muted);padding:6px 0 2px;opacity:0.6;';
+    note.textContent = '↑ Previous session restored';
+    msgs.appendChild(note);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    showScreen('chat');
+  } catch(e) {
+    clearSession();
+  }
+})();
+
+const userInput = document.getElementById('userInput');
+const sendBtn   = document.getElementById('sendBtn');
+
+userInput.addEventListener('input', () => {
+  sendBtn.disabled = userInput.value.trim() === '' || isLoading;
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+});
+
+userInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+sendBtn.addEventListener('click', sendMessage);
+</script>
 </body>
 </html>
